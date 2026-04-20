@@ -18,7 +18,7 @@ else:
     st.stop()
 
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+model = genai.GenerativeModel(model_name="gemini-2.5-flash")
 
 # --- FUNZIONI DI ESPORTAZIONE ---
 
