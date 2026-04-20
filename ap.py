@@ -5,13 +5,18 @@ import io
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
-from docx import Document
+import docx
 
 # --- CONFIGURAZIONE ---
 st.set_page_config(page_title="InclusivAI-tool", layout="wide")
 
-# INSERISCI QUI LA TUA CHIAVE API
-API_KEY = "AIzaSyAlcp9gJmuWI1RvaelrgBAGbDNr1l59y8E"
+# Invece di scrivere la chiave qui, la leggiamo dai Secrets di Streamlit
+if "GEMINI_API_KEY" in st.secrets:
+    API_KEY = st.secrets["GEMINI_API_KEY"]
+else:
+    st.error("Chiave API non trovata nei Secrets di Streamlit!")
+    st.stop()
+
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
@@ -41,7 +46,7 @@ def crea_pdf(testo):
 def crea_word(testo):
     """Genera un file Word (.docx) dal testo fornito."""
     buf = io.BytesIO()
-    doc = Document()
+    doc = docx.Document()
     doc.add_heading('InclusivAI - Test di Verifica', 0)
     doc.add_paragraph(testo)
     doc.save(buf)
