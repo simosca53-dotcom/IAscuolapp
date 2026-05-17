@@ -1,3 +1,53 @@
+import streamlit as st
+import google.generativeai as genai
+from PIL import Image
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import simpleSplit
+import docx
+
+# --- CONFIGURAZIONE ---
+st.set_page_config(page_title="InclusivAI-tool", layout="wide")
+
+API_KEY = "AIzaSyBqab5Ib035fmA_n4mF1X_1ptCMWqmHabY"
+
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+
+# --- FUNZIONI DI ESPORTAZIONE ---
+
+def crea_pdf(testo):
+    """Genera un file PDF dal testo fornito."""
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    width, height = letter
+    c.setFont("Helvetica", 12)
+    
+    # Gestione del testo a capo automatico
+    lines = simpleSplit(testo, "Helvetica", 12, width - 100)
+    y = height - 50
+    for line in lines:
+        if y < 50: # Nuova pagina se finisce lo spazio
+            c.showPage()
+            c.setFont("Helvetica", 12)
+            y = height - 50
+        c.drawString(50, y, line)
+        y -= 15
+    c.save()
+    buf.seek(0)
+    return buf
+
+def crea_word(testo):
+    """Genera un file Word (.docx) dal testo fornito."""
+    buf = io.BytesIO()
+    doc = docx.Document()
+    doc.add_heading('InclusivAI - Test di Verifica', 0)
+    doc.add_paragraph(testo)
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
 # --- INTERFACCIA APP ---
 st.title("🚀 InclusivAI-tool")
 st.write("Trasforma contenuti didattici in materiali inclusivi (PDF/Word).")
@@ -61,7 +111,6 @@ with col2:
                 
                 try:
                     response = model.generate_content(contenuto)
-                    # Salviamo il risultato nella memoria di Streamlit per non perderlo al refresh
                     st.session_state["risultato_ia"] = response.text
                 except Exception as e:
                     st.error(f"Errore durante la chiamata a Gemini: {e}")
@@ -76,3 +125,4 @@ with col2:
         else:
             file_pdf = crea_pdf(st.session_state["risultato_ia"])
             st.download_button("📥 Scarica DOCUMENTO (.pdf)", file_pdf, "inclusivai_output.pdf", mime="application/pdf")
+        
